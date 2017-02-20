@@ -1,10 +1,10 @@
 #**Behavioral Cloning** 
 
-This project is part of Udacity's [Self-Driving Car Engineer Nanodegree](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013). The goal of the project is to build a Convolutional Neural Network (CNN) to clone human driving behaviour. 
+This project is part of Udacity's [Self-Driving Car Engineer Nanodegree](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013). The goal of the project is to build a Convolutional Neural Network (CNN) to drive a car in a simulator by providing steering angles. 
 
-Udacity provides a simulator based on Unity to use for training and testing the CNN. The simulator has two modes: Training and Autonomous mode. In Training mode, the car can be controlled by keyboard, mouse or a gamepad and the simulator records data to be used for training the CNN. In Autonomous mode, the car is controlled by the CNN which provides steering angles as an input to the simulator. Udacity provides additionally a python script to connect the simulator to the CNN.
+Udacity provides a simulator based on Unity to use for training and testing the CNN. The simulator has two modes: Training and Autonomous. In Training mode, the car can be controlled by keyboard, mouse or a gamepad and the simulator records images from cameras mounted on the car along with steering angles. The data recorded is then used to train the CNN. Then in the Autonomous mode, the simulator receives the steering angles from the trained CNN to drive the car. The throttle values are provided by the simulator.
 
-The animated GIF images below show the devolped CNN driving the car autonomously on the 2 tracks offered by the simulator: 
+The animated GIF images below show the developed CNN driving the car autonomously on the two tracks offered by the simulator: 
 
 Track 1            |  Track 2
 :-------------------------:|:-------------------------:
@@ -13,9 +13,12 @@ Track 1            |  Track 2
 To successfully complete the project, one has to go through the following steps:
 
 1) Use the simulator to collect data of good driving behavior.
+
 2) Build a Convolution Neural Network in Keras that predicts steering angles from images.
-3) Train and validate the model with a training and validation set.
-4) Test that the model successfully drives around track one without leaving the road. The simulator provides two tracks to use for training and testing the model.
+
+3) Train and validate the model (CNN) with a training and validation set.
+
+4) Test that the model successfully drives around track one without leaving the road.
 
 The above steps are covered in implementation details section below.
 
@@ -27,7 +30,7 @@ The project includes the following files:
 * **model.py**: This file contains the script to create and train the model
 * **drive.py**: This file is used to connect the model to the simulator for driving the car in autonomous mode
 * **model.h5**:  This file contains the trained convolution neural network (saved by Keras  after training)
-* **README.md** This file describing the project.
+* **README.md**: Project readme file
 
 ## Running the model
 
@@ -36,7 +39,7 @@ To run the model, start the simulator in Autonomous mode and run the following c
 ```sh
 python drive.py model.h5
 ```
-The script will connect to the simulator and provide it with steering angles.
+The script will connect to the simulator and start providing it with the steering angles from the CNN.
 
 
 ## Implementation details
@@ -53,9 +56,9 @@ A sample from "driving_log.csv" is shown below:
 
 ![enter image description here](https://github.com/ahany/behavioral-cloning/blob/master/Readme_Images/driving_log_sample.png) 
 
-For the training, 3 laps were recorded driving around track one counter-clockwise direction and then the car was turned around and 3 other laps were recorded in clockwise direction. This helps overcome the fact that track one has a left turn bias and therefore generates a more balanced data-set.
+For the training, 3 laps were recorded driving around track one in counter-clockwise direction. Then the car was turned around and 3 other laps were recorded in clockwise direction. This helps overcome the fact that track one has a left turn bias and therefore generates a more balanced data-set.
 
-This is how a histogram of steering angles would look like if we only drive counter-clockwise (zero angles excluded). Negative steering angles represent left turns.
+This is how a histogram of steering angles would look like if the car was only driven counter-clockwise (zero angles excluded). Negative steering angles represent left turns.
 
 ![enter image description here](https://github.com/ahany/behavioral-cloning/blob/master/Readme_Images/Counter_clockwise_driving.png)
 
@@ -72,7 +75,7 @@ Driving in both directions would result in a more balanced data set as shown in 
 
 ### Model architecture
 
-The model used is an implementation of the paper [End to End Learning for Self-Driving Cars](https://arxiv.org/abs/1604.07316) by Nvidia. The model consists of 5 convolutional layers and 3 fully connected layers. ReLU activation functions were used and the input images to the model were normalized by a Keras lambda layer. 
+The model used is an implementation of the paper [End to End Learning for Self-Driving Cars](https://arxiv.org/abs/1604.07316) by NVIDIA. The model consists of 5 convolutional layers and 3 fully connected layers. ReLU activation functions were used and the input images to the model were normalized by a Keras lambda layer. 
  
  The benefit of hard-coding the normalization in the model is that no further normalization is required during the inference phase in drive.py
  
@@ -88,7 +91,7 @@ The recorded data ended up being 6487 samples of which 80% is used for training 
 
 #### Using data from left and right cameras
 
-The images from the left and right cameras are used to extend the dataset. Hence, for every sample, we obtain an extra two samples (Left and Right) by applying an offset to steering angle. 
+Each training sample contains 3 images from the 3 mounted cameras and one steering angle. The images from the left and right cameras are used to extend the dataset. From every sample, additional two samples (left and right camera images) are generated by applying an offset to the steering angle.
 
     for index in range(0, len(train_data)):
        row = train_data[index]
@@ -104,7 +107,7 @@ The images from the left and right cameras are used to extend the dataset. Hence
 
 #### Brightness augmentation
 
-Images brightness was augmented by conversion to YUV color space and then adding a random value to the Y-channel. An offset was used to prevent too dark generated images.
+Brightness was augmented by converting images into YUV color space and then adding a random value to the Y-channel. An offset was used to prevent generating too dark images. Brightness augmentation helps the model perform well under different lighting conditions.
 
     def image_augment(image):
 	    img_yuv = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
@@ -112,12 +115,12 @@ Images brightness was augmented by conversion to YUV color space and then adding
 	    img_aug = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB)
 	    return img_aug
 
-An sample of brightness augmented images is shown below:
+A sample of brightness augmented images is shown below:
 
 ![enter image description here](https://github.com/ahany/behavioral-cloning/blob/master/Readme_Images/image_augmentation.png)
 #### Image cropping
 
-Images from the simulator are of size (160, 320, 3). I cropped the images to remove the hood of the car and the part above the horizon. The information contained in these parts are not relevant for training the model.
+Images generated by the simulator are of size (160, 320, 3). I cropped the images to remove the hood of the car and the part above the horizon. The information contained in these parts are not relevant for training the model.
 
 After cropping the image was resized to the size expected by the model (66×200×3).
 
@@ -129,8 +132,7 @@ After cropping the image was resized to the size expected by the model (66×200�
 
 ####  Horizontal and vertical shifts.
 
-Horizontal and vertical shifts were applied to images to simulate the effect of the car at different positions in the lane. An offset was added to the steering angle to help train the model to recover to the center of the lane in case of deviating. Vertical shifts 
-were added to simulate going downhill or uphill.
+Horizontal and vertical shifts were applied to images to simulate the effect of the car being at different positions in the lane. An offset was added to the steering angle to help train the model to recover to the center of the lane in case of deviating. Vertical shifts were added to simulate going downhill or uphill. Steering angle was not changed for vertical shifts.
 
     def image_shift(image, steer):
 	    tr_x = 100*np.random.uniform()-50
@@ -201,6 +203,12 @@ No test dataset was used and instead the model was directly tested in the simula
 ### Results
 
 The car manages to drive well on both tracks mostly in the center of the lane although track 2 was never seen by the model in the training or validation phase.
+
+Videos for both tracks are shown below:
+
+[![Alt text for your video](https://img.youtube.com/vi/4viSa0gIrBk/hqdefault.jpg)](https://youtu.be/4viSa0gIrBk)
+
+[![Alt text for your video](https://img.youtube.com/vi/COnCz8UMzTw/hqdefault.jpg)](https://youtu.be/COnCz8UMzTw)
 
 Although the simulator is a very simplified version of the real world but it helps give an idea about the capability of deep learning models.
 
