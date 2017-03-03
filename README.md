@@ -200,6 +200,10 @@ For each epoch, the training generator yields 20000 training samples.
 
 No test dataset was used and instead the model was directly tested in the simulator's autonomous mode.
 
+The number of epochs was decided by experimenting and testing on the simulator. Surprisingly I found the best behaviour to be when the model was trained only for 5 epochs. Increasing the number of epochs had a negative impact on the model performance.
+
+The validation error in this project was not a signficant measure of model performance and accordingly implementing early stopping based on validation loss was not relevant in this project.
+
 ### Results
 
 The car manages to drive well on both tracks mostly in the center of the lane although track 2 was never seen by the model in the training or validation phase.
